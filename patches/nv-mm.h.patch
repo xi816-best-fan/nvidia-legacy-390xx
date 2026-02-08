@@ -1,0 +1,28 @@
+--- common/inc/nv-mm.h.old 2026-02-07 21:04:48.064214294 +0500
++++ common/inc/nv-mm.h 2026-02-07 21:03:39.040700441 +0500
+@@ -24,11 +24,24 @@
+ #define __NV_MM_H__
+ 
+ #include "conftest.h"
+-
++#include <linux/version.h>
++#include <linux/sched.h>
++#include <linux/mm.h>
+ #if !defined(NV_VM_FAULT_T_IS_PRESENT)
+ typedef int vm_fault_t;
+ #endif
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,12,0)
++static inline long 
++NV_GET_USER_PAGES_REMOTE(struct mm_struct *mm, unsigned long start,unsigned long nr_pages,unsigned int gup_flags, struct page **pages)
++{
++	int locked = 0;
++	return get_user_pages_remote(mm,start,nr_pages,gup_flags,pages,&locked);
++}
++#else
++#define NV_GET_USER_PAGES_REMOTE(tsk,mm,start,nr_pages,flags,pages,vmas) \
++		get_user_pages_remote(tsk,mm,start,nr_pages,flags,pages,vmas)
++#endif
+ /* get_user_pages
+  *
+  * The 8-argument version of get_user_pages was deprecated by commit 
